@@ -35,7 +35,7 @@ export const GenreFilter: React.FC<GenreFilterProps> = ({ genres }) => {
       <select
         value={selectedGenre || ''}
         onChange={handleGenreChange}
-        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+        className="w-full px-4 py-2 border border-[#0284c7] rounded-lg bg-[#f0f9ff] text-[#1e3a8a] focus:outline-none focus:ring-2 focus:ring-[#0284c7] focus:border-[#0284c7]"
       >
         <option value="">All Genres</option>
         {genres.map((genre) => (
