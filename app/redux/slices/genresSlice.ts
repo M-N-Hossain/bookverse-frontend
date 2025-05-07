@@ -3,7 +3,7 @@ import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 
 interface GenreState {
   genres: Genre[];
-  selectedGenre: string | null;
+  selectedGenre: number | null;
 }
 
 const initialState: GenreState = {
@@ -18,7 +18,7 @@ const genresSlice = createSlice({
     setGenres: (state, action: PayloadAction<Genre[]>) => {
       state.genres = action.payload;
     },
-    setSelectedGenre: (state, action: PayloadAction<string | null>) => {
+    setSelectedGenre: (state, action: PayloadAction<number | null>) => {
       state.selectedGenre = action.payload;
     },
   },

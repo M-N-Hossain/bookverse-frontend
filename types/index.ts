@@ -1,21 +1,18 @@
 export type Status = 'to_read' | 'in_progress' | 'read';
 
 export interface Genre {
-  id: string;
+  id: number;
   name: string;
 }
 
 export interface Book {
-  id: string;
+  id: number;
   title: string;
   author: string;
   coverImage: string;
-  genreId: string;
-  genreName: string;
   status: Status;
-  description?: string;
-  addedDate: string;
-  modifiedDate?: string;
+  createdAt: string;
+  genre: Genre;
 }
 
 export interface BookState {
