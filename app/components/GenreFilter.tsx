@@ -17,13 +17,12 @@ export const GenreFilter: React.FC<GenreFilterProps> = ({ genres }) => {
   const { books } = useSelector((state: RootState) => state.books);
 
   const handleGenreChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
-    const genreId = event.target.value || null;
+    const genreId = event.target.value ? Number(event.target.value) : null;
     dispatch(setSelectedGenre(genreId));
     
     // Filter books based on selected genre
     if (genreId) {
       const filtered = books.filter(book => book.genre.id === genreId);
-      console.log(books.genre)
       dispatch(setFilteredBooks(filtered));
     } else {
       // If no genre selected, show all books
