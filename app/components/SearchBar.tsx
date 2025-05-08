@@ -20,7 +20,7 @@ export const SearchBar: React.FC = () => {
     <div className="relative w-full md:w-80">
       <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
         <svg
-          className="w-4 h-4 text-gray-500"
+          className="w-4 h-4 text-[#0284c7]"
           aria-hidden="true"
           xmlns="http://www.w3.org/2000/svg"
           fill="none"
@@ -37,7 +37,7 @@ export const SearchBar: React.FC = () => {
       </div>
       <input
         type="text"
-        className="block w-full p-2 pl-10 text-sm text-gray-900 border border-gray-300 rounded-lg bg-white focus:ring-blue-500 focus:border-blue-500"
+        className="block w-full p-2 pl-10 text-sm text-[#1e3a8a] border border-[#0284c7] rounded-lg bg-[#f0f9ff] focus:ring-[#0284c7] focus:border-[#0284c7] placeholder-[#0284c7]/50"
         placeholder="Search books..."
         value={search}
         onChange={(e) => setSearch(e.target.value)}
@@ -48,7 +48,7 @@ export const SearchBar: React.FC = () => {
           onClick={() => setSearch('')}
         >
           <svg
-            className="w-4 h-4 text-gray-500 hover:text-gray-700"
+            className="w-4 h-4 text-[#0284c7] hover:text-[#1e3a8a]"
             aria-hidden="true"
             xmlns="http://www.w3.org/2000/svg"
             fill="none"
