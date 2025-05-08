@@ -1,65 +1,118 @@
-import { Genre } from '@/types';
+import { Book, Genre } from '@/types';
 import { Dialog, Transition } from '@headlessui/react';
-import { PlusIcon } from '@heroicons/react/24/outline';
-import { Fragment, useState } from 'react';
+import { PencilIcon, PlusIcon } from '@heroicons/react/24/outline';
+import { Fragment, useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
-import { useAddBookMutation } from '../redux/api/apiSlice';
+import { useAddBookMutation, useUpdateBookMutation } from '../redux/api/apiSlice';
 import { RootState } from '../redux/store';
 
-interface CreateBookFormProps {
-  onBookCreated: () => void;
+interface BookFormProps {
+  onBookSaved: () => void;
+  isEdit?: boolean;
+  book?: Book;
+  trigger?: React.ReactNode;
 }
 
-export const CreateBookForm: React.FC<CreateBookFormProps> = ({ onBookCreated }) => {
+export const BookForm: React.FC<BookFormProps> = ({ onBookSaved, isEdit = false, book, trigger }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [addBook] = useAddBookMutation();
+  const [updateBook] = useUpdateBookMutation();
   const { genres } = useSelector((state: RootState) => state.genres);
   
   const [formData, setFormData] = useState({
-    title: '',
-    author: '',
-    genreId: '',
-    status: 'to_read' as const,
-    coverImage: '',
+    id: book?.id || 0,
+    title: book?.title || '',
+    author: book?.author || '',
+    genreId: book?.genre.id.toString() || '',
+    status: book?.status || 'to_read' as const,
+    coverImage: book?.coverImage || '',
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  useEffect(() => {
+    if (book) {
+      setFormData({
+        id: book.id,
+        title: book.title,
+        author: book.author,
+        genreId: book.genre.id.toString(),
+        status: book.status,
+        coverImage: book.coverImage,
+      });
+    }
+  }, [book]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
 
     try {
-      await addBook({
-        ...formData,
-        genreId: parseInt(formData.genreId),
-      }).unwrap();
+      if (isEdit && book) {
+        await updateBook({
+          id: formData.id,
+          title: formData.title,
+          author: formData.author,
+          status: formData.status,
+          coverImage: formData.coverImage,
+          genreId: parseInt(formData.genreId),
+        }).unwrap();
+      } else {
+        console.log('Creating book with genreId:', parseInt(formData.genreId));
+        await addBook({
+          title: formData.title,
+          author: formData.author,
+          status: formData.status,
+          coverImage: formData.coverImage,
+          genreId: parseInt(formData.genreId)
+        }).unwrap();
+      }
 
       setIsOpen(false);
-      setFormData({
-        title: '',
-        author: '',
-        genreId: '',
-        status: 'to_read',
-        coverImage: '',
-      });
-      onBookCreated();
+      if (!isEdit) {
+        setFormData({
+          id: 0,
+          title: '',
+          author: '',
+          genreId: '',
+          status: 'to_read',
+          coverImage: '',
+        });
+      }
+      onBookSaved();
     } catch (error) {
-      console.error('Error creating book:', error);
-      alert('Failed to create book. Please try again.');
+      console.error(`Error ${isEdit ? 'updating' : 'creating'} book:`, error);
+      alert(`Failed to ${isEdit ? 'update' : 'create'} book`);
     } finally {
       setIsSubmitting(false);
     }
   };
 
+  // Only show the default trigger if no custom trigger is provided and we're not already open
+  const defaultTrigger = isEdit ? (
+    <button
+      onClick={() => setIsOpen(true)}
+      className="p-1 bg-white rounded-full shadow-md hover:bg-gray-100 z-10 cursor-pointer"
+      aria-label="Edit book"
+    >
+      <PencilIcon className="h-5 w-5 text-blue-600" />
+    </button>
+  ) : (
+    <button
+      onClick={() => setIsOpen(true)}
+      className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-[#2563eb] hover:bg-[#60a5fa] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#2563eb]"
+    >
+      <PlusIcon className="h-5 w-5 mr-2" />
+      Add Book
+    </button>
+  );
+
   return (
     <>
-      <button
-        onClick={() => setIsOpen(true)}
-        className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-[#2563eb] hover:bg-[#60a5fa] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#2563eb]"
-      >
-        <PlusIcon className="h-5 w-5 mr-2" />
-        Add Book
-      </button>
+      {trigger ? (
+        <div onClick={() => setIsOpen(true)}>{trigger}</div>
+      ) : (
+        defaultTrigger
+      )}
 
       <Transition appear show={isOpen} as={Fragment}>
         <Dialog as="div" className="relative z-10" onClose={() => setIsOpen(false)}>
@@ -91,7 +144,7 @@ export const CreateBookForm: React.FC<CreateBookFormProps> = ({ onBookCreated })
                     as="h3"
                     className="text-lg font-medium leading-6 text-[#1e293b] mb-4"
                   >
-                    Add New Book
+                    {isEdit ? 'Edit Book' : 'Add New Book'}
                   </Dialog.Title>
 
                   <form onSubmit={handleSubmit} className="space-y-4">
@@ -177,7 +230,7 @@ export const CreateBookForm: React.FC<CreateBookFormProps> = ({ onBookCreated })
                     <div className="mt-6 flex justify-end space-x-3">
                       <button
                         type="button"
-                        className="inline-flex justify-center rounded-md border border-[#60a5fa]/30 bg-white px-4 py-2 text-sm font-medium text-[#475569] hover:bg-[#f4f9ff] focus:outline-none focus:ring-2 focus:ring-[#2563eb] focus:ring-offset-2"
+                        className="rounded-md border border-[#60a5fa]/30 bg-white px-4 py-2 text-sm font-medium text-[#1e293b] hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-[#2563eb] focus:ring-offset-2"
                         onClick={() => setIsOpen(false)}
                       >
                         Cancel
@@ -187,7 +240,7 @@ export const CreateBookForm: React.FC<CreateBookFormProps> = ({ onBookCreated })
                         disabled={isSubmitting}
                         className="inline-flex justify-center rounded-md border border-transparent bg-[#2563eb] px-4 py-2 text-sm font-medium text-white hover:bg-[#60a5fa] focus:outline-none focus:ring-2 focus:ring-[#2563eb] focus:ring-offset-2"
                       >
-                        {isSubmitting ? 'Creating...' : 'Create Book'}
+                        {isSubmitting ? (isEdit ? 'Updating...' : 'Creating...') : (isEdit ? 'Update Book' : 'Create Book')}
                       </button>
                     </div>
                   </form>
@@ -199,4 +252,9 @@ export const CreateBookForm: React.FC<CreateBookFormProps> = ({ onBookCreated })
       </Transition>
     </>
   );
+};
+
+// Export CreateBookForm for backwards compatibility
+export const CreateBookForm: React.FC<{ onBookCreated: () => void }> = ({ onBookCreated }) => {
+  return <BookForm onBookSaved={onBookCreated} />;
 }; 

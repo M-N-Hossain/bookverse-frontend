@@ -1,4 +1,4 @@
-import { Book, Genre } from '@/types';
+import { Book, Genre, UpdateBook } from '@/types';
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
 
 export const apiSlice = createApi({
@@ -32,7 +32,7 @@ export const apiSlice = createApi({
       }),
       invalidatesTags: ['Books'],
     }),
-    updateBook: builder.mutation<Book, Partial<Book>>({
+    updateBook: builder.mutation<UpdateBook, Partial<UpdateBook>>({
       query: (book) => ({
         url: `/books/${book.id}`,
         method: 'PUT',

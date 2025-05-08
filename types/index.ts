@@ -13,6 +13,17 @@ export interface Book {
   status: Status;
   createdAt: string;
   genre: Genre;
+
+}
+
+export interface UpdateBook {
+  id: number;
+  title: string;
+  author: string;
+  coverImage: string;
+  status: Status;
+  createdAt: string;
+  genreId: number;
 }
 
 export interface BookState {

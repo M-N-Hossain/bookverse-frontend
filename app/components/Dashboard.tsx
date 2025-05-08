@@ -8,7 +8,7 @@ import { setGenres } from '../redux/slices/genresSlice';
 import { RootState } from '../redux/store';
 import { BookCounter } from './BookCounter';
 import { BookGrid } from './BookGrid';
-import { CreateBookForm } from './CreateBookForm';
+import { BookForm } from './CreateBookForm';
 import { GenreFilter } from './GenreFilter';
 import { SearchBar } from './SearchBar';
 
@@ -68,7 +68,7 @@ export const Dashboard: React.FC = () => {
     <div className="container mx-auto px-4 py-8 bg-[#e0f2fe] min-h-screen">
       <div className="flex justify-between items-center mb-8">
         <h1 className="text-3xl font-bold text-[#1e3a8a]">BookVerse</h1>
-        <CreateBookForm onBookCreated={refetchBooks} />
+        <BookForm onBookSaved={refetchBooks} />
       </div>
 
       <BookCounter books={filteredBooks} />
