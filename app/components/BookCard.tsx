@@ -2,11 +2,10 @@
 
 import { Book } from '@/types';
 import { Dialog, Transition } from '@headlessui/react';
-import { PencilIcon } from '@heroicons/react/24/outline';
-import React, { Fragment, useEffect, useState } from 'react';
-import { useSelector } from 'react-redux';
-import { useGetBooksQuery, useUpdateBookMutation } from '../redux/api/apiSlice';
-import { RootState } from '../redux/store';
+import { ExclamationTriangleIcon, PencilIcon, TrashIcon } from '@heroicons/react/24/outline';
+import React, { Fragment, useState } from 'react';
+import { useDeleteBookMutation, useGetBooksQuery, useGetGenresQuery } from '../redux/api/apiSlice';
+import { BookForm } from './CreateBookForm';
 
 interface BookCardProps {
   book: Book;
@@ -25,72 +24,57 @@ const statusText = {
 };
 
 export const BookCard: React.FC<BookCardProps> = ({ book }) => {
-  const [isOpen, setIsOpen] = useState(false);
-  const [updateBook] = useUpdateBookMutation();
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const { refetch } = useGetBooksQuery();
-  const { genres } = useSelector((state: RootState) => state.genres);
+  const { data: genresData } = useGetGenresQuery();
+  const [deleteBook, { isLoading: isDeleting }] = useDeleteBookMutation();
   
   // Find the genre name for display
-  const genre = genres.find(g => g.id === book.genre.id);
+  const genre = genresData?.find(g => g.id === book.genre.id);
   
-  const [formData, setFormData] = useState({
-    id: book.id,
-    title: book.title,
-    author: book.author,
-    genreId: book.genre.id,
-    status: book.status,
-    coverImage: book.coverImage,
-  });
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  // Handle successful book update
+  const handleBookUpdated = () => {
+    refetch();
+  };
 
-  // Update form data when book changes
-  useEffect(() => {
-    setFormData({
-      id: book.id,
-      title: book.title,
-      author: book.author,
-      genreId: book.genre.id,
-      status: book.status,
-      coverImage: book.coverImage,
-    });
-  }, [book]);
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsSubmitting(true);
-
+  // Handle book deletion
+  const handleDeleteBook = async () => {
     try {
-      const selectedGenre = genres.find(g => g.id === formData.genreId);
-      console.log(selectedGenre);
-      
-      await updateBook({
-        id: formData.id,
-        title: formData.title,
-        author: formData.author,
-        status: formData.status,
-        coverImage: formData.coverImage,
-        genreId: formData.genreId
-      }).unwrap();
-
-      setIsOpen(false);
-      setIsSubmitting(false);
-      refetch(); // Refresh the books data
+      await deleteBook(book.id.toString()).unwrap();
+      refetch();
+      setShowDeleteConfirm(false);
     } catch (error) {
-      console.error('Error updating book:', error);
-      alert('Failed to update book');
-      setIsSubmitting(false);
+      console.error('Error deleting book:', error);
+      alert('Failed to delete book');
     }
   };
 
   return (
     <div className="card transition-all duration-300 hover:scale-105 hover:shadow-xl hover:bg-gradient-to-br from-blue-200 to-indigo-300 relative group">
-      {/* Edit button */}
+      {/* Edit button - using BookForm with isEdit=true */}
+      <div className="absolute top-2 right-12 z-20 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+        <BookForm 
+          isEdit={true} 
+          book={book} 
+          onBookSaved={handleBookUpdated}
+          trigger={
+            <button 
+              className="p-2 bg-white rounded-full shadow-md hover:bg-gray-100 cursor-pointer"
+              aria-label="Edit book"
+            >
+              <PencilIcon className="h-5 w-5 text-blue-600" />
+            </button>
+          }
+        />
+      </div>
+
+      {/* Delete button */}
       <button 
-        onClick={() => setIsOpen(true)}
-        className="absolute top-2 right-2 p-2 bg-white rounded-full shadow-md hover:bg-gray-100 z-20 opacity-0 group-hover:opacity-100 transition-opacity duration-200 cursor-pointer"
-        aria-label="Edit book"
+        onClick={() => setShowDeleteConfirm(true)}
+        className="absolute top-2 right-2 p-2 bg-red-500 rounded-full shadow-md hover:bg-red-400 z-20 opacity-0 group-hover:opacity-100 transition-opacity duration-200 cursor-pointer"
+        aria-label="Delete book"
       >
-        <PencilIcon className="h-5 w-5 text-blue-600" />
+        <TrashIcon className="h-5 w-5 text-white" />
       </button>
 
       <div className="h-64 bg-[#f0f9ff] relative">
@@ -113,9 +97,9 @@ export const BookCard: React.FC<BookCardProps> = ({ book }) => {
         </div>
       </div>
 
-      {/* Edit Dialog */}
-      <Transition appear show={isOpen} as={Fragment}>
-        <Dialog as="div" className="relative z-10" onClose={() => setIsOpen(false)}>
+      {/* Delete Confirmation Dialog */}
+      <Transition appear show={showDeleteConfirm} as={Fragment}>
+        <Dialog as="div" className="relative z-10" onClose={() => setShowDeleteConfirm(false)}>
           <Transition.Child
             as={Fragment}
             enter="ease-out duration-300"
@@ -139,111 +123,37 @@ export const BookCard: React.FC<BookCardProps> = ({ book }) => {
                 leaveFrom="opacity-100 scale-100"
                 leaveTo="opacity-0 scale-95"
               >
-                <Dialog.Panel className="w-full max-w-md transform overflow-hidden rounded-2xl bg-[#e0f2fe] p-6 text-left align-middle shadow-xl transition-all">
+                <Dialog.Panel className="w-full max-w-md transform overflow-hidden rounded-2xl bg-white p-6 text-left align-middle shadow-xl transition-all">
                   <Dialog.Title
                     as="h3"
-                    className="text-lg font-medium leading-6 text-[#1e293b] mb-4"
+                    className="text-lg font-medium leading-6 text-gray-900 flex items-center"
                   >
-                    Edit Book
+                    <ExclamationTriangleIcon className="h-6 w-6 text-red-500 mr-2" aria-hidden="true" />
+                    Delete Book
                   </Dialog.Title>
+                  <div className="mt-2">
+                    <p className="text-sm text-gray-500">
+                      Are you sure you want to delete "{book.title}"? This action cannot be undone.
+                    </p>
+                  </div>
 
-                  <form onSubmit={handleSubmit} className="space-y-4">
-                    <div>
-                      <label htmlFor="title" className="block text-sm font-medium text-[#1e293b]">
-                        Title
-                      </label>
-                      <input
-                        type="text"
-                        id="title"
-                        required
-                        className="mt-1 block w-full rounded-md border-[#60a5fa]/30 shadow-sm focus:border-[#2563eb] focus:ring-[#2563eb] bg-white"
-                        value={formData.title}
-                        onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                      />
-                    </div>
-
-                    <div>
-                      <label htmlFor="author" className="block text-sm font-medium text-[#1e293b]">
-                        Author
-                      </label>
-                      <input
-                        type="text"
-                        id="author"
-                        required
-                        className="mt-1 block w-full rounded-md border-[#60a5fa]/30 shadow-sm focus:border-[#2563eb] focus:ring-[#2563eb] bg-white"
-                        value={formData.author}
-                        onChange={(e) => setFormData({ ...formData, author: e.target.value })}
-                      />
-                    </div>
-
-                    <div>
-                      <label htmlFor="genre" className="block text-sm font-medium text-[#1e293b]">
-                        Genre
-                      </label>
-                      <select
-                        id="genre"
-                        required
-                        className="mt-1 block w-full rounded-md border-[#60a5fa]/30 shadow-sm focus:border-[#2563eb] focus:ring-[#2563eb] bg-white"
-                        value={formData.genreId}
-                        onChange={(e) => setFormData({ ...formData, genreId: parseInt(e.target.value) })}
-                      >
-                        <option value="">Select a genre</option>
-                        {genres.map((genre) => (
-                          <option key={genre.id} value={genre.id}>
-                            {genre.name}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-
-                    <div>
-                      <label htmlFor="coverImage" className="block text-sm font-medium text-[#1e293b]">
-                        Cover Image URL
-                      </label>
-                      <input
-                        type="url"
-                        id="coverImage"
-                        required
-                        className="mt-1 block w-full rounded-md border-[#60a5fa]/30 shadow-sm focus:border-[#2563eb] focus:ring-[#2563eb] bg-white"
-                        value={formData.coverImage}
-                        onChange={(e) => setFormData({ ...formData, coverImage: e.target.value })}
-                      />
-                    </div>
-
-                    <div>
-                      <label htmlFor="status" className="block text-sm font-medium text-[#1e293b]">
-                        Status
-                      </label>
-                      <select
-                        id="status"
-                        required
-                        className="mt-1 block w-full rounded-md border-[#60a5fa]/30 shadow-sm focus:border-[#2563eb] focus:ring-[#2563eb] bg-white"
-                        value={formData.status}
-                        onChange={(e) => setFormData({ ...formData, status: e.target.value as 'to_read' | 'in_progress' | 'read' })}
-                      >
-                        <option value="to_read">To Read</option>
-                        <option value="in_progress">In Progress</option>
-                        <option value="read">Read</option>
-                      </select>
-                    </div>
-
-                    <div className="mt-6 flex justify-end space-x-3">
-                      <button
-                        type="button"
-                        className="rounded-md border border-[#60a5fa]/30 bg-white px-4 py-2 text-sm font-medium text-[#1e293b] hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-[#2563eb] focus:ring-offset-2"
-                        onClick={() => setIsOpen(false)}
-                      >
-                        Cancel
-                      </button>
-                      <button
-                        type="submit"
-                        disabled={isSubmitting}
-                        className="inline-flex justify-center rounded-md border border-transparent bg-[#2563eb] px-4 py-2 text-sm font-medium text-white hover:bg-[#60a5fa] focus:outline-none focus:ring-2 focus:ring-[#2563eb] focus:ring-offset-2"
-                      >
-                        {isSubmitting ? 'Updating...' : 'Update Book'}
-                      </button>
-                    </div>
-                  </form>
+                  <div className="mt-6 flex justify-end space-x-3">
+                    <button
+                      type="button"
+                      className="rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-[#2563eb] focus:ring-offset-2"
+                      onClick={() => setShowDeleteConfirm(false)}
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="button"
+                      disabled={isDeleting}
+                      className="inline-flex justify-center rounded-md border border-transparent bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2"
+                      onClick={handleDeleteBook}
+                    >
+                      {isDeleting ? 'Deleting...' : 'Delete'}
+                    </button>
+                  </div>
                 </Dialog.Panel>
               </Transition.Child>
             </div>
