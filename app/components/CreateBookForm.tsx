@@ -212,8 +212,8 @@ export const BookForm: React.FC<BookFormProps> = ({ onBookSaved, isEdit = false,
                         Cover Image URL
                       </label>
                       <input
-                        type="url"
-                        id="coverImage"
+                        type={type}
+                        id={id}
                         required
                         className="mt-1 block w-full rounded-md border-[#60a5fa]/30 shadow-sm focus:border-[#2563eb] focus:ring-[#2563eb] bg-white/90 p-2.5"
                         value={formData.coverImage}
@@ -258,10 +258,13 @@ export const BookForm: React.FC<BookFormProps> = ({ onBookSaved, isEdit = false,
                 </Dialog.Panel>
               </Transition.Child>
             </div>
+
           </div>
-        </Dialog>
-      </Transition>
-    </>
+        </div>
+      </Dialog>
+    </Transition>
+  </>
+  
   );
 };
 
