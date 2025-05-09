@@ -3,6 +3,7 @@ import { Dialog, Transition } from '@headlessui/react';
 import { PencilIcon, PlusIcon } from '@heroicons/react/24/outline';
 import { Fragment, useEffect, useState } from 'react';
 import { useAddBookMutation, useGetGenresQuery, useUpdateBookMutation } from '../redux/api/apiSlice';
+import { bookToasts } from '../utils/toast';
 
 interface BookFormProps {
   onBookSaved: () => void;
@@ -56,6 +57,7 @@ export const BookForm: React.FC<BookFormProps> = ({ onBookSaved, isEdit = false,
         };
         
         await updateBook(bookUpdate).unwrap();
+        bookToasts.updateSuccess();
       } else {
         const genreId = parseInt(formData.genreId);
         
@@ -68,6 +70,7 @@ export const BookForm: React.FC<BookFormProps> = ({ onBookSaved, isEdit = false,
         };
         
         await addBook(bookInput).unwrap();
+        bookToasts.createSuccess();
       }
 
       setIsOpen(false);
@@ -84,7 +87,11 @@ export const BookForm: React.FC<BookFormProps> = ({ onBookSaved, isEdit = false,
       onBookSaved();
     } catch (error) {
       console.error(`Error ${isEdit ? 'updating' : 'creating'} book:`, error);
-      alert(`Failed to ${isEdit ? 'update' : 'create'} book`);
+      if (isEdit) {
+        bookToasts.updateError(error);
+      } else {
+        bookToasts.createError(error);
+      }
     } finally {
       setIsSubmitting(false);
     }
@@ -128,65 +135,66 @@ export const BookForm: React.FC<BookFormProps> = ({ onBookSaved, isEdit = false,
             leaveFrom="opacity-100"
             leaveTo="opacity-0"
           >
-            <div className="fixed inset-0 bg-black bg-opacity-25" />
+            <div className="fixed inset-0 backdrop-blur-sm" />
           </Transition.Child>
 
           <div className="fixed inset-0 overflow-y-auto">
             <div className="flex min-h-full items-center justify-center p-4 text-center">
               <Transition.Child
                 as={Fragment}
-                enter="ease-out duration-300"
-                enterFrom="opacity-0 scale-95"
-                enterTo="opacity-100 scale-100"
-                leave="ease-in duration-200"
-                leaveFrom="opacity-100 scale-100"
-                leaveTo="opacity-0 scale-95"
+                enter="ease-out duration-200"
+                enterFrom="opacity-0 translate-y-4"
+                enterTo="opacity-100 translate-y-0"
+                leave="ease-in duration-150"
+                leaveFrom="opacity-100 translate-y-0"
+                leaveTo="opacity-0 translate-y-0"
               >
-                <Dialog.Panel className="w-full max-w-md transform overflow-hidden rounded-2xl bg-[#e0f2fe] p-6 text-left align-middle shadow-xl transition-all">
+                <Dialog.Panel className="w-full max-w-md transform-none overflow-hidden rounded-2xl bg-[#bcdef5]/90 backdrop-blur-sm p-8 text-left align-middle shadow-xl transition-transform duration-150">
                   <Dialog.Title
                     as="h3"
-                    className="text-lg font-medium leading-6 text-[#1e293b] mb-4"
+                    className="text-xl font-medium leading-6 text-[#1e293b] mb-6"
                   >
                     {isEdit ? 'Edit Book' : 'Add New Book'}
                   </Dialog.Title>
 
-                  <form onSubmit={handleSubmit} className="space-y-4">
+                  <form onSubmit={handleSubmit} className="space-y-6">
                     <div>
-                      <label htmlFor="title" className="block text-sm font-medium text-[#1e293b]">
+                      <label htmlFor="title" className="block text-sm font-medium text-[#1e293b] mb-2">
                         Title
                       </label>
                       <input
                         type="text"
                         id="title"
                         required
-                        className="mt-1 block w-full rounded-md border-[#60a5fa]/30 shadow-sm focus:border-[#2563eb] focus:ring-[#2563eb] bg-white"
+                        autoFocus
+                        className="mt-1 block w-full rounded-md border-[#60a5fa]/30 shadow-sm focus:border-[#2563eb] focus:ring-[#2563eb] bg-white/90 p-2.5"
                         value={formData.title}
                         onChange={(e) => setFormData({ ...formData, title: e.target.value })}
                       />
                     </div>
 
                     <div>
-                      <label htmlFor="author" className="block text-sm font-medium text-[#1e293b]">
+                      <label htmlFor="author" className="block text-sm font-medium text-[#1e293b] mb-2">
                         Author
                       </label>
                       <input
                         type="text"
                         id="author"
                         required
-                        className="mt-1 block w-full rounded-md border-[#60a5fa]/30 shadow-sm focus:border-[#2563eb] focus:ring-[#2563eb] bg-white"
+                        className="mt-1 block w-full rounded-md border-[#60a5fa]/30 shadow-sm focus:border-[#2563eb] focus:ring-[#2563eb] bg-white/90 p-2.5"
                         value={formData.author}
                         onChange={(e) => setFormData({ ...formData, author: e.target.value })}
                       />
                     </div>
 
                     <div>
-                      <label htmlFor="genre" className="block text-sm font-medium text-[#1e293b]">
+                      <label htmlFor="genre" className="block text-sm font-medium text-[#1e293b] mb-2">
                         Genre
                       </label>
                       <select
                         id="genre"
                         required
-                        className="mt-1 block w-full rounded-md border-[#60a5fa]/30 shadow-sm focus:border-[#2563eb] focus:ring-[#2563eb] bg-white"
+                        className="mt-1 block w-full rounded-md border-[#60a5fa]/30 shadow-sm focus:border-[#2563eb] focus:ring-[#2563eb] bg-white/90 p-2.5"
                         value={formData.genreId}
                         onChange={(e) => setFormData({ ...formData, genreId: e.target.value })}
                       >
@@ -200,27 +208,27 @@ export const BookForm: React.FC<BookFormProps> = ({ onBookSaved, isEdit = false,
                     </div>
 
                     <div>
-                      <label htmlFor="coverImage" className="block text-sm font-medium text-[#1e293b]">
+                      <label htmlFor="coverImage" className="block text-sm font-medium text-[#1e293b] mb-2">
                         Cover Image URL
                       </label>
                       <input
                         type="url"
                         id="coverImage"
                         required
-                        className="mt-1 block w-full rounded-md border-[#60a5fa]/30 shadow-sm focus:border-[#2563eb] focus:ring-[#2563eb] bg-white"
+                        className="mt-1 block w-full rounded-md border-[#60a5fa]/30 shadow-sm focus:border-[#2563eb] focus:ring-[#2563eb] bg-white/90 p-2.5"
                         value={formData.coverImage}
                         onChange={(e) => setFormData({ ...formData, coverImage: e.target.value })}
                       />
                     </div>
 
                     <div>
-                      <label htmlFor="status" className="block text-sm font-medium text-[#1e293b]">
+                      <label htmlFor="status" className="block text-sm font-medium text-[#1e293b] mb-2">
                         Status
                       </label>
                       <select
                         id="status"
                         required
-                        className="mt-1 block w-full rounded-md border-[#60a5fa]/30 shadow-sm focus:border-[#2563eb] focus:ring-[#2563eb] bg-white"
+                        className="mt-1 block w-full rounded-md border-[#60a5fa]/30 shadow-sm focus:border-[#2563eb] focus:ring-[#2563eb] bg-white/90 p-2.5"
                         value={formData.status}
                         onChange={(e) => setFormData({ ...formData, status: e.target.value as 'to_read' | 'in_progress' | 'read' })}
                       >
@@ -230,10 +238,10 @@ export const BookForm: React.FC<BookFormProps> = ({ onBookSaved, isEdit = false,
                       </select>
                     </div>
 
-                    <div className="mt-6 flex justify-end space-x-3">
+                    <div className="mt-8 flex justify-end space-x-4">
                       <button
                         type="button"
-                        className="rounded-md border border-[#60a5fa]/30 bg-white px-4 py-2 text-sm font-medium text-[#1e293b] hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-[#2563eb] focus:ring-offset-2"
+                        className="rounded-md border border-[#60a5fa]/30 bg-white/90 px-5 py-2.5 text-sm font-medium text-[#1e293b] hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-[#2563eb] focus:ring-offset-2"
                         onClick={() => setIsOpen(false)}
                       >
                         Cancel
@@ -241,7 +249,7 @@ export const BookForm: React.FC<BookFormProps> = ({ onBookSaved, isEdit = false,
                       <button
                         type="submit"
                         disabled={isSubmitting}
-                        className="inline-flex justify-center rounded-md border border-transparent bg-[#2563eb] px-4 py-2 text-sm font-medium text-white hover:bg-[#60a5fa] focus:outline-none focus:ring-2 focus:ring-[#2563eb] focus:ring-offset-2"
+                        className="inline-flex justify-center rounded-md border border-transparent bg-[#2563eb] px-5 py-2.5 text-sm font-medium text-white hover:bg-[#60a5fa] focus:outline-none focus:ring-2 focus:ring-[#2563eb] focus:ring-offset-2"
                       >
                         {isSubmitting ? (isEdit ? 'Updating...' : 'Creating...') : (isEdit ? 'Update Book' : 'Create Book')}
                       </button>

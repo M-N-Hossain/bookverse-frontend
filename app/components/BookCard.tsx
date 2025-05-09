@@ -5,6 +5,7 @@ import { Dialog, Transition } from '@headlessui/react';
 import { ExclamationTriangleIcon, PencilIcon, TrashIcon } from '@heroicons/react/24/outline';
 import React, { Fragment, useState } from 'react';
 import { useDeleteBookMutation, useGetBooksQuery, useGetGenresQuery } from '../redux/api/apiSlice';
+import { bookToasts } from '../utils/toast';
 import { BookForm } from './CreateBookForm';
 
 interface BookCardProps {
@@ -43,9 +44,10 @@ export const BookCard: React.FC<BookCardProps> = ({ book }) => {
       await deleteBook(book.id.toString()).unwrap();
       refetch();
       setShowDeleteConfirm(false);
+      bookToasts.deleteSuccess();
     } catch (error) {
       console.error('Error deleting book:', error);
-      alert('Failed to delete book');
+      bookToasts.deleteError(error);
     }
   };
 
