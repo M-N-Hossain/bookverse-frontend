@@ -15,6 +15,25 @@ export interface Book {
   genre: Genre;
 }
 
+// Used for adding a new book
+export interface BookInput {
+  title: string;
+  author: string;
+  coverImage: string;
+  status: Status;
+  genreId: number;
+}
+
+// Used for updating an existing book
+export interface BookUpdate {
+  id: number;
+  title?: string;
+  author?: string;
+  coverImage?: string;
+  status?: Status;
+  genreId?: number;
+}
+
 export interface BookState {
   books: Book[];
   filteredBooks: Book[];

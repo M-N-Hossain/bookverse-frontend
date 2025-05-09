@@ -1,46 +1,30 @@
 'use client';
 
-import React, { useEffect } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
+import React from 'react';
+import { useSelector } from 'react-redux';
 import { useGetBooksQuery, useGetGenresQuery } from '../redux/api/apiSlice';
-import { setBooks } from '../redux/slices/booksSlice';
-import { setGenres } from '../redux/slices/genresSlice';
 import { RootState } from '../redux/store';
 import { BookCounter } from './BookCounter';
 import { BookGrid } from './BookGrid';
-import { CreateBookForm } from './CreateBookForm';
+import { BookForm } from './CreateBookForm';
 import { GenreFilter } from './GenreFilter';
 import { SearchBar } from './SearchBar';
 
 export const Dashboard: React.FC = () => {
-  const dispatch = useDispatch();
-  const { filteredBooks } = useSelector((state: RootState) => state.books);
-  const { genres } = useSelector((state: RootState) => state.genres);
+  const filterState = useSelector((state: RootState) => state.filter);
   
   const { 
     data: booksData, 
     isLoading: isBooksLoading, 
     error: booksError,
     refetch: refetchBooks
-  } = useGetBooksQuery();
+  } = useGetBooksQuery(filterState);
   
   const {
     data: genresData,
     isLoading: isGenresLoading,
     error: genresError
   } = useGetGenresQuery();
-
-  useEffect(() => {
-    if (booksData) {
-      dispatch(setBooks(booksData));
-    }
-  }, [booksData, dispatch]);
-
-  useEffect(() => {
-    if (genresData) {
-      dispatch(setGenres(genresData));
-    }
-  }, [genresData, dispatch]);
 
   if (isBooksLoading || isGenresLoading) {
     return (
@@ -64,11 +48,14 @@ export const Dashboard: React.FC = () => {
     );
   }
 
+  const filteredBooks = booksData?.filteredBooks || [];
+  const genres = genresData || [];
+
   return (
     <div className="container mx-auto px-4 py-8 bg-[#e0f2fe] min-h-screen">
       <div className="flex justify-between items-center mb-8">
         <h1 className="text-3xl font-bold text-[#1e3a8a]">BookVerse</h1>
-        <CreateBookForm onBookCreated={refetchBooks} />
+        <BookForm onBookSaved={refetchBooks} />
       </div>
 
       <BookCounter books={filteredBooks} />
