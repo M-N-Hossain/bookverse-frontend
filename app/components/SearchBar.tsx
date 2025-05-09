@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { useDispatch } from 'react-redux';
-import { setSearchQuery } from '../redux/slices/booksSlice';
+import { setSearchQuery } from '../redux/slices/filterSlice';
 
 export const SearchBar: React.FC = () => {
   const [search, setSearch] = useState('');

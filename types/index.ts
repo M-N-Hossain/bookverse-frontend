@@ -13,17 +13,25 @@ export interface Book {
   status: Status;
   createdAt: string;
   genre: Genre;
-
 }
 
-export interface UpdateBook {
-  id: number;
+// Used for adding a new book
+export interface BookInput {
   title: string;
   author: string;
   coverImage: string;
   status: Status;
-  createdAt: string;
   genreId: number;
+}
+
+// Used for updating an existing book
+export interface BookUpdate {
+  id: number;
+  title?: string;
+  author?: string;
+  coverImage?: string;
+  status?: Status;
+  genreId?: number;
 }
 
 export interface BookState {

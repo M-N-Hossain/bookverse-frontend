@@ -1,10 +1,8 @@
-import { Book, Genre } from '@/types';
+import { Book, BookInput, BookUpdate, Genre } from '@/types';
 import { Dialog, Transition } from '@headlessui/react';
 import { PencilIcon, PlusIcon } from '@heroicons/react/24/outline';
 import { Fragment, useEffect, useState } from 'react';
-import { useSelector } from 'react-redux';
-import { useAddBookMutation, useUpdateBookMutation } from '../redux/api/apiSlice';
-import { RootState } from '../redux/store';
+import { useAddBookMutation, useGetGenresQuery, useUpdateBookMutation } from '../redux/api/apiSlice';
 
 interface BookFormProps {
   onBookSaved: () => void;
@@ -17,7 +15,7 @@ export const BookForm: React.FC<BookFormProps> = ({ onBookSaved, isEdit = false,
   const [isOpen, setIsOpen] = useState(false);
   const [addBook] = useAddBookMutation();
   const [updateBook] = useUpdateBookMutation();
-  const { genres } = useSelector((state: RootState) => state.genres);
+  const { data: genres = [] } = useGetGenresQuery();
   
   const [formData, setFormData] = useState({
     id: book?.id || 0,
@@ -48,23 +46,28 @@ export const BookForm: React.FC<BookFormProps> = ({ onBookSaved, isEdit = false,
 
     try {
       if (isEdit && book) {
-        await updateBook({
+        const bookUpdate: BookUpdate = {
           id: formData.id,
           title: formData.title,
           author: formData.author,
           status: formData.status,
           coverImage: formData.coverImage,
-          genreId: parseInt(formData.genreId),
-        }).unwrap();
+          genreId: parseInt(formData.genreId)
+        };
+        
+        await updateBook(bookUpdate).unwrap();
       } else {
-        console.log('Creating book with genreId:', parseInt(formData.genreId));
-        await addBook({
+        const genreId = parseInt(formData.genreId);
+        
+        const bookInput: BookInput = {
           title: formData.title,
           author: formData.author,
           status: formData.status,
           coverImage: formData.coverImage,
-          genreId: parseInt(formData.genreId)
-        }).unwrap();
+          genreId: genreId
+        };
+        
+        await addBook(bookInput).unwrap();
       }
 
       setIsOpen(false);

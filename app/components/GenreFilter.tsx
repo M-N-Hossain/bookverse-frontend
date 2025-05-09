@@ -3,8 +3,7 @@
 import { Genre } from '@/types';
 import React from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { setFilteredBooks } from '../redux/slices/booksSlice';
-import { setSelectedGenre } from '../redux/slices/genresSlice';
+import { setSelectedGenreId } from '../redux/slices/filterSlice';
 import { RootState } from '../redux/store';
 
 interface GenreFilterProps {
@@ -13,27 +12,17 @@ interface GenreFilterProps {
 
 export const GenreFilter: React.FC<GenreFilterProps> = ({ genres }) => {
   const dispatch = useDispatch();
-  const { selectedGenre } = useSelector((state: RootState) => state.genres);
-  const { books } = useSelector((state: RootState) => state.books);
+  const { selectedGenreId } = useSelector((state: RootState) => state.filter);
 
   const handleGenreChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
     const genreId = event.target.value ? Number(event.target.value) : null;
-    dispatch(setSelectedGenre(genreId));
-    
-    // Filter books based on selected genre
-    if (genreId) {
-      const filtered = books.filter(book => book.genre.id === genreId);
-      dispatch(setFilteredBooks(filtered));
-    } else {
-      // If no genre selected, show all books
-      dispatch(setFilteredBooks(books));
-    }
+    dispatch(setSelectedGenreId(genreId));
   };
 
   return (
     <div className="w-full md:w-64">
       <select
-        value={selectedGenre || ''}
+        value={selectedGenreId || ''}
         onChange={handleGenreChange}
         className="w-full px-4 py-2 border border-[#0284c7] rounded-lg bg-[#f0f9ff] text-[#1e3a8a] focus:outline-none focus:ring-2 focus:ring-[#0284c7] focus:border-[#0284c7]"
       >
