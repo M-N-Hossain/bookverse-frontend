@@ -74,12 +74,6 @@ export const Dashboard: React.FC = () => {
       <div className="flex justify-between items-center mb-8">
         <div className="flex items-center">
           <h1 className="text-3xl font-bold text-[#1e3a8a]">BookVerse</h1>
-          <a 
-            href="/error-demo" 
-            className="ml-4 px-3 py-1 text-sm bg-blue-100 text-blue-800 rounded hover:bg-blue-200 transition-colors"
-          >
-            Error Demo
-          </a>
         </div>
         <ErrorBoundary
           fallback={
