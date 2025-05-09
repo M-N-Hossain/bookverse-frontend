@@ -4,9 +4,11 @@ import React from 'react';
 import { useSelector } from 'react-redux';
 import { useGetBooksQuery, useGetGenresQuery } from '../redux/api/apiSlice';
 import { RootState } from '../redux/store';
+import { showErrorToast } from '../utils/toast';
 import { BookCounter } from './BookCounter';
 import { BookGrid } from './BookGrid';
 import { BookForm } from './CreateBookForm';
+import ErrorBoundary from './ErrorBoundary';
 import { GenreFilter } from './GenreFilter';
 import { SearchBar } from './SearchBar';
 
@@ -26,6 +28,16 @@ export const Dashboard: React.FC = () => {
     error: genresError
   } = useGetGenresQuery();
 
+  // Show toast for API errors
+  React.useEffect(() => {
+    if (booksError) {
+      showErrorToast(booksError, 'Failed to load books');
+    }
+    if (genresError) {
+      showErrorToast(genresError, 'Failed to load genres');
+    }
+  }, [booksError, genresError]);
+
   if (isBooksLoading || isGenresLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-[#e0f2fe]">
@@ -43,6 +55,12 @@ export const Dashboard: React.FC = () => {
         <div className="text-center text-[#1e3a8a]">
           <h2 className="text-2xl font-bold mb-2">Error Loading Data</h2>
           <p>Please try again later.</p>
+          <button
+            onClick={() => window.location.reload()}
+            className="mt-4 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
+          >
+            Retry
+          </button>
         </div>
       </div>
     );
@@ -54,18 +72,45 @@ export const Dashboard: React.FC = () => {
   return (
     <div className="container mx-auto px-4 py-8 bg-[#e0f2fe] min-h-screen">
       <div className="flex justify-between items-center mb-8">
-        <h1 className="text-3xl font-bold text-[#1e3a8a]">BookVerse</h1>
-        <BookForm onBookSaved={refetchBooks} />
+        <div className="flex items-center">
+          <h1 className="text-3xl font-bold text-[#1e3a8a]">BookVerse</h1>
+          <a 
+            href="/error-demo" 
+            className="ml-4 px-3 py-1 text-sm bg-blue-100 text-blue-800 rounded hover:bg-blue-200 transition-colors"
+          >
+            Error Demo
+          </a>
+        </div>
+        <ErrorBoundary
+          fallback={
+            <button
+              onClick={() => window.location.reload()}
+              className="px-4 py-2 bg-gray-200 text-gray-800 rounded hover:bg-gray-300"
+            >
+              Something went wrong. Click to reload.
+            </button>
+          }
+        >
+          <BookForm onBookSaved={refetchBooks} />
+        </ErrorBoundary>
       </div>
 
-      <BookCounter books={filteredBooks} />
+      <ErrorBoundary>
+        <BookCounter books={filteredBooks} />
+      </ErrorBoundary>
       
       <div className="flex flex-col md:flex-row gap-4 mb-8">
-        <SearchBar />
-        <GenreFilter genres={genres} />
+        <ErrorBoundary>
+          <SearchBar />
+        </ErrorBoundary>
+        <ErrorBoundary>
+          <GenreFilter genres={genres} />
+        </ErrorBoundary>
       </div>
       
-      <BookGrid books={filteredBooks} />
+      <ErrorBoundary>
+        <BookGrid books={filteredBooks} />
+      </ErrorBoundary>
     </div>
   );
 }; 
